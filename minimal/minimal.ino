@@ -1,45 +1,29 @@
 #define SERVO_PIN 44
 
-#include <Wire.h>
-#include <Adafruit_PWMServoDriver.h>
-
-Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver(0x40);
-
-#define SERVOMIN 125
-#define SERVOMAX 625
-
-
 void servoAngle(int angle) {
-  int pulseWidth = map(angle, 0, 180, 500, 2500);
-  ledcWrite(SERVO_PIN, pulseWidth * 65536 / 20000);
+  // Convert angle to microseconds (standard servo ranges from 500 to 2500 microsec)
+  int pulseWidthMicros = map(angle, 0, 180, 500, 2500);
+  
+  // Convert microseconds to 12-bit digital value for 50Hz cycle
+  // (pulseWidthMicros / 20000) * 4096
+  uint32_t duty = ((uint32_t)pulseWidthMicros * 4096UL) / 20000UL;
+  
+  ledcWrite(SERVO_PIN, duty);
 }
 
 void setup() {
-  pwm.begin();
-  pwm.setPWMFreq(50);
-
-  pinMode(1, OUTPUT);
-  pinMode(2, OUTPUT);
-  ledcAttach(SERVO_PIN, 50, 16);
+  // Attach Pin 44 to a 50Hz frequency with 12-bit resolution (Max for S3 is 14-bit)
+  ledcAttach(SERVO_PIN, 50, 12);
   
-  pwm.setPWM(0, 0, 0);
-  digitalWrite(1, HIGH);
-  digitalWrite(2, LOW);
-  delay(5000);
-
-  pwm.setPWM(0, 0, 90);
-  digitalWrite(1, LOW);
-  digitalWrite(2, LOW);
+  // Test angles
+  servoAngle(0);
+  delay(1000);
+  
+  servoAngle(90);
   delay(2000);
-
-  ledcWrite(SERVO_PIN, 32768);
-  digitalWrite(1, LOW);
-  digitalWrite(2, HIGH);
-  delay(10000);
-
-  pwm.setPWM(0, 0, 0);
-  digitalWrite(1, LOW);
-  digitalWrite(2, LOW);
+  
+  servoAngle(0);
+  delay(1000);
 }
 
 void loop() {
