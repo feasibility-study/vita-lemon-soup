@@ -77,7 +77,7 @@ void setup() {
 
     Serial.println("  Moving forward...");
     setMotor(i, 255);
-    delay(10000);
+    delay(1000);
 
     Serial.println("  Stopping...");
     stopMotor(i);
@@ -85,7 +85,7 @@ void setup() {
 
     Serial.println("  Moving backward...");
     setMotor(i, -255);
-    delay(5000);
+    delay(1000);
 
     Serial.println("  Stopping...");
     stopMotor(i);
