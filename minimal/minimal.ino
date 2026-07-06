@@ -65,32 +65,9 @@ void setup() {
   Serial.begin(115200);
   delay(500);
 
-  // Initialize all 5 motors
-  for (int i = 0; i < MOTOR_COUNT; i++) {
-    initMotor(i);
-  }
-
-  // Quick test routine running through each motor sequentially
-  for (int i = 0; i < MOTOR_COUNT; i++) {
-    Serial.print("Testing Motor ");
-    Serial.println(i + 1);
-
-    Serial.println("  Moving forward...");
-    setMotor(i, 255);
-    delay(10000);
-
-    Serial.println("  Stopping...");
-    stopMotor(i);
-    delay(500);
-
-    Serial.println("  Moving backward...");
-    setMotor(i, -255);
-    delay(5000);
-
-    Serial.println("  Stopping...");
-    stopMotor(i);
-    delay(500);
-  }
+  Serial.println("aaa forward");
+  initMotor(0);
+  setMotor(0, 255);
 }
 
 void loop() {
