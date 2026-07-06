@@ -1,7 +1,11 @@
 import machine
 import time
 import math
+import camera
+import network
+import socket
 import struct
+import ubinascii
 from machine import I2C, Pin
 
 
@@ -287,26 +291,31 @@ pwm = PCA9685Driver(scl_pin=6, sda_pin=5)
 pwm.set_pwm_frequency(50) #Set frequency to 50Hz for servos
 
 
-for i in range(10):
-    pwm.servo_set_angle(0, 180) # Channel 0, angle 90°
-    time.sleep(1)
-    pwm.servo_set_angle(0, 0) # Channel 0, angle 0°
-    time.sleep(1)
+# for i in range(10):
+#     pwm.servo_set_angle(0, 180) # Channel 0, angle 90°
+#     time.sleep(1)
+#     pwm.servo_set_angle(0, 0) # Channel 0, angle 0°
+#     time.sleep(1)
 
-pwm.servo_set_angle(1,180) # Channel 0, angle 90°
-time.sleep(1)
-pwm.servo_set_angle(1, 0) # Channel 0, angle 0°
-time.sleep(1)
-
-
+# pwm.servo_set_angle(1,180) # Channel 0, angle 90°
+# time.sleep(1)
+# pwm.servo_set_angle(1, 0) # Channel 0, angle 0°
+# time.sleep(1)
 
 
 
-# Motion profile parameters
+
+
+
+# # Motion profile parameters
 ACCEL = 200          # %/s
 DECEL = 400          # %/s (2x faster than accel)
 MAX_SPEED = 100      # %
 UPDATE_RATE = 0.01   # s
+
+
+def set_channel(motor_id, percentage):
+    pwm.set_pwm_dc_percent(motor_id, percentage)
 
 
 def set_motor(motor_id, percentage):
@@ -462,4 +471,149 @@ def move_robot(dx, dy, dtheta):
 
     # --- Phase 3: final orientation ---
     rotate(shortest_angle(dtheta))
-    
+
+
+
+
+
+
+
+
+#--------------------------------------------------------------------------------------------------------
+
+print("move door out of way")
+pwm.servo_set_angle(0, 0)
+
+print("set motor")
+set_channel(3, 100)
+set_channel(2, 0)
+time.sleep(5)
+
+print("add latch back")
+pwm.servo_set_angle(0, 180)
+
+print("stop motor")
+set_channel(3, 0)
+set_channel(2, 0)
+time.sleep(5)
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+# ----------------------------
+# 1. ACCESS POINT
+# ----------------------------
+ap = network.WLAN(network.AP_IF)
+ap.active(True)
+ap.config(essid="CAMERA-LIVE")
+
+while not ap.active():
+    time.sleep(0.5)
+
+print("AP started")
+print("IP:", ap.ifconfig()[0])
+
+# ----------------------------
+# 2. CAMERA INIT
+# ----------------------------
+try:
+    camera.init()
+    print("Camera ready")
+except Exception as e:
+    print("Camera init failed:", e)
+
+# ----------------------------
+# 3. SOCKET SERVER
+# ----------------------------
+server = socket.socket()
+server.bind(("0.0.0.0", 80))
+server.listen(1)
+
+print("Server ready")
+
+# ----------------------------
+# 4. HTML PAGE (VIEWER)
+# ----------------------------
+html = """\
+HTTP/1.1 200 OK
+
+<html>
+<head>
+<title>ESP32 Camera</title>
+</head>
+<body>
+<h2>ESP32 Camera Stream</h2>
+<img src="/jpg" />
+</body>
+</html>
+"""
+
+
+# ----------------------------
+# 6. CAPTURE LOOP TIMER
+# ----------------------------
+last_capture = 0
+
+# ----------------------------
+# 7. MAIN LOOP
+# ----------------------------
+while False:
+    # ----------------------------
+    # Capture every 10 seconds
+    # ----------------------------
+    if time.time() - last_capture >= 10:
+        try:
+            latest_img = camera.capture_jpg()
+            latest_img = bytes(latest_img)
+
+
+            # Base64 encode + print
+            b64 = ubinascii.b2a_base64(latest_img).decode().strip()
+            print("BASE64 IMAGE:")
+            print(b64)
+
+            last_capture = time.time()
+
+        except Exception as e:
+            print("Capture error:", e)
+
+    # ----------------------------
+    # Handle HTTP requests
+    # ----------------------------
+    try:
+        conn, addr = server.accept()
+        print("Client:", addr)
+
+        request = conn.recv(1024)
+        request = str(request)
+
+        # Serve JPEG
+        if "/jpg" in request:
+            if latest_img:
+                conn.send("HTTP/1.1 200 OK\r\n")
+                conn.send("Content-Type: image/jpeg\r\n")
+                conn.send("Content-Length: {}\r\n".format(len(latest_img)))
+                conn.send("Connection: close\r\n\r\n")
+                conn.send(latest_img)
+            else:
+                conn.send("HTTP/1.1 503 Service Unavailable\r\n\r\n")
+
+        # Serve HTML
+        else:
+            conn.send(html)
+
+        conn.close()
+
+    except:
+        pass
+
+
