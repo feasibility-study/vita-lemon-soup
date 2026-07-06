@@ -1,13 +1,13 @@
-/*
-   Minimal 5-motor driver sketch for ESP32-S3
-   Assumes each motor is controlled by a pair of driver input pins.
-*/
-
+#define SERVO_PIN 44
 #define MOTOR_COUNT 5
 #define PWM_FREQUENCY 20000
 #define PWM_RESOLUTION 8
 
-// Pin mapping for the 5 motors
+void servoAngle(int angle) {
+  int pulseWidth = map(angle, 0, 180, 500, 2500);
+  ledcWrite(SERVO_PIN, pulseWidth * 4096UL / 20000UL);
+}
+
 const int MOTOR_PINS[MOTOR_COUNT][2] = {
   {1, 2},   // Motor 1 -- Spool to move cable
   {3, 4},   // Motor 2 -- drive base (2-5)
@@ -15,11 +15,6 @@ const int MOTOR_PINS[MOTOR_COUNT][2] = {
   {7, 8},   // Motor 4
   {9, 44}   // Motor 5 
 };
-
-// drivebase is as follows
-//      facing right
-// facing up    facing down
-//      facing left
 
 void initMotor(int motorIndex) {
   int pinA = MOTOR_PINS[motorIndex][0];
@@ -62,15 +57,26 @@ void stopMotor(int motorIndex) {
 }
 
 void setup() {
-  Serial.begin(115200);
-  delay(500);
-
-  Serial.println("aaa forward");
   initMotor(0);
+  pinMode(1, OUTPUT);
+  pinMode(2, OUTPUT);
+  ledcAttach(SERVO_PIN, 50, 12);
+
+  
+  servoAngle(90);
+  digitalWrite(1, HIGH);
+  digitalWrite(2, LOW);
+  setMotor(0, -255);
+  delay(5000);
+  servoAngle(0);
+  stopMotor(0);
+
   setMotor(0, 255);
+  delay(4000);
+  servoAngle(90);
+  digitalWrite(1, LOW);
+  digitalWrite(2, LOW);
 }
 
 void loop() {
-  // Your main logic goes here
-  // e.g., setMotor(0, 200); // Drive motor 1 at speed 200
 }
