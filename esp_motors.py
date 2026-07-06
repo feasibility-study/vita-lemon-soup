@@ -617,3 +617,6 @@ while False:
         pass
 
 
+
+set_channel(4, 100)
+set_channel(3, 0)
