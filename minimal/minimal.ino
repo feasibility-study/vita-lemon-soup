@@ -58,24 +58,19 @@ void stopMotor(int motorIndex) {
 
 void setup() {
   initMotor(0);
-  pinMode(1, OUTPUT);
-  pinMode(2, OUTPUT);
-  ledcAttach(SERVO_PIN, 50, 12);
 
-  
-  servoAngle(90);
-  digitalWrite(1, HIGH);
-  digitalWrite(2, LOW);
   setMotor(0, -255);
   delay(5000);
-  servoAngle(0);
   stopMotor(0);
 
-  setMotor(0, 255);
-  delay(4000);
-  servoAngle(90);
-  digitalWrite(1, LOW);
-  digitalWrite(2, LOW);
+  delay(2000);
+  for (i = 0; i < 10; i++) {
+    setMotor(0,255);
+    delay(100);
+    stopMotor(0);
+    delay(100);
+  }
+  stopMotor(0);
 }
 
 void loop() {

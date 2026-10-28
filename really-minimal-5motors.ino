@@ -53,7 +53,7 @@ void setup() {
 
   // Quick test routine
   Serial.println("Moving forward...");
-  setMotor(150);
+  setMotor(255);
   delay(1000);
 
   Serial.println("Stopping...");
@@ -61,7 +61,7 @@ void setup() {
   delay(500);
 
   Serial.println("Moving backward...");
-  setMotor(-150);
+  setMotor(-255);
   delay(1000);
 
   Serial.println("Stopping...");

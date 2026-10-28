@@ -15,19 +15,19 @@
 #define PWM_FREQUENCY 20000
 #define PWM_RESOLUTION 8
 
-#define SPOOL_MOTOR       0
-#define BASE_MOTOR_START  1
-#define BASE_MOTOR_END    4
-#define BASE_MOTOR_COUNT  (BASE_MOTOR_END - BASE_MOTOR_START + 1) // 4
+#define SPOOL_MOTOR 0
+#define BASE_MOTOR_START 1
+#define BASE_MOTOR_END 4
+#define BASE_MOTOR_COUNT (BASE_MOTOR_END - BASE_MOTOR_START + 1)  // 4
 
 const int MOTOR_PINS[MOTOR_COUNT][2] = {
-  {1, 2},   // Motor 1 (index 0) -- Spool to move cable
-  {3, 4},   // Motor 2 (index 1) -- drive base
-  {5, 6},   // Motor 3 (index 2) -- drive base
-  {7, 8},   // Motor 4 (index 3) -- drive base
-  {9, 44}   // Motor 5 (index 4) -- drive base
-            // NOTE: pin 44 here collides with SERVO_PIN below -- re-check
-            // your wiring, one of these needs to move to a free pin.
+  { 1, 2 },  // Motor 1 (index 0) -- Spool to move cable
+  { 3, 4 },  // Motor 2 (index 1) -- drive base
+  { 5, 6 },  // Motor 3 (index 2) -- drive base
+  { 7, 8 },  // Motor 4 (index 3) -- drive base
+  { 9, 44 }  // Motor 5 (index 4) -- drive base
+             // NOTE: pin 44 here collides with SERVO_PIN below -- re-check
+             // your wiring, one of these needs to move to a free pin.
 };
 
 /*
@@ -44,29 +44,29 @@ const int MOTOR_PINS[MOTOR_COUNT][2] = {
   BASE_MOTOR_SIGN lets you flip individual wheels (+1/-1) during
   calibration without touching the swivel logic itself.
 */
-const int BASE_MOTOR_SIGN[BASE_MOTOR_COUNT] = { 1, 1, 1, 1 }; // calibrate me
+const int BASE_MOTOR_SIGN[BASE_MOTOR_COUNT] = { 1, 1, 1, 1 };  // calibrate me
 
 // Compass-style directions the base can be told to face
 enum BaseDirection {
-  DIR_UP    = 0,
+  DIR_UP = 0,
   DIR_RIGHT = 1,
-  DIR_DOWN  = 2,
-  DIR_LEFT  = 3
+  DIR_DOWN = 2,
+  DIR_LEFT = 3
 };
 
-BaseDirection currentBaseDirection = DIR_UP; // set to your known start orientation
+BaseDirection currentBaseDirection = DIR_UP;  // set to your known start orientation
 
 // Open-loop timing calibration -- no encoders/IMU assumed here.
 // Time it takes to swivel 90 degrees at SWIVEL_SPEED. Measure and adjust.
-#define MS_PER_90_DEG   400
-#define SWIVEL_SPEED    180
+#define MS_PER_90_DEG 400
+#define SWIVEL_SPEED 180
 
 // =====================================================================
 //  Servo (latch) configuration
 // =====================================================================
-#define SERVO_PIN            44   // conflicts with Motor 5 pin B above, see note
-#define SERVO_LATCH_ANGLE    90
-#define SERVO_RELEASE_ANGLE  0
+#define SERVO_PIN 44  // conflicts with Motor 5 pin B above, see note
+#define SERVO_LATCH_ANGLE 90
+#define SERVO_RELEASE_ANGLE 0
 
 // =====================================================================
 //  Low-level motor helpers (from your reference, unchanged)
@@ -140,13 +140,13 @@ void spinBase(int spinSpeed) {
 // Picks whichever way (cw/ccw) is the shorter turn, runs for a time
 // proportional to how many 90-degree steps are needed, then stops.
 void swivelToDirection(BaseDirection targetDirection, int speed = SWIVEL_SPEED) {
-  int diffCW = ((int)targetDirection - (int)currentBaseDirection + 4) % 4; // 0..3
+  int diffCW = ((int)targetDirection - (int)currentBaseDirection + 4) % 4;  // 0..3
 
   if (diffCW == 0) {
-    return; // already facing that way
+    return;  // already facing that way
   }
 
-  int stepsCW  = diffCW;
+  int stepsCW = diffCW;
   int stepsCCW = 4 - diffCW;
 
   int rotationSteps;
@@ -154,10 +154,10 @@ void swivelToDirection(BaseDirection targetDirection, int speed = SWIVEL_SPEED) 
 
   if (stepsCW <= stepsCCW) {
     rotationSteps = stepsCW;
-    spinSpeed = speed;     // clockwise
+    spinSpeed = speed;  // clockwise
   } else {
     rotationSteps = stepsCCW;
-    spinSpeed = -speed;    // counter-clockwise
+    spinSpeed = -speed;  // counter-clockwise
   }
 
   unsigned long duration = (unsigned long)rotationSteps * MS_PER_90_DEG;
@@ -189,14 +189,14 @@ void moveSpool(int direction, unsigned long durationMs, int speed = 200) {
 //  3. spool unwinds so the cable goes slack and the servo alone
 //     carries the load (motor isn't fighting the latch)
 void loadTrebuchet(unsigned long windDurationMs,
-                    unsigned long unwindDurationMs,
-                    int spoolSpeed = 200) {
-  moveSpool(1, windDurationMs, spoolSpeed);       // 1. wind up
+                   unsigned long unwindDurationMs,
+                   int spoolSpeed = 200) {
+  moveSpool(1, windDurationMs, spoolSpeed);  // 1. wind up
 
-  servoAngle(SERVO_LATCH_ANGLE);                  // 2. latch
-  delay(300);                                     // let servo finish moving
+  servoAngle(SERVO_LATCH_ANGLE);  // 2. latch
+  delay(300);                     // let servo finish moving
 
-  moveSpool(-1, unwindDurationMs, spoolSpeed);    // 3. unwind, slack the cable
+  moveSpool(-1, unwindDurationMs, spoolSpeed);  // 3. unwind, slack the cable
 }
 
 // Drops the latch: servo swings back to 0 and the arm launches.
@@ -214,7 +214,7 @@ void setup() {
   }
 
   ledcAttach(SERVO_PIN, 50, 12);
-  servoAngle(SERVO_RELEASE_ANGLE); // start unlatched/safe
+  servoAngle(SERVO_RELEASE_ANGLE);  // start unlatched/safe
 
   // Example usage:
   // swivelToDirection(DIR_RIGHT);
